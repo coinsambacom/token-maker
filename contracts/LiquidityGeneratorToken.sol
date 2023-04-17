@@ -1,11 +1,19 @@
-import "@openzeppelin/contracts/utils/Context.sol";
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
-import "@openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract LiquidityGeneratorToken is   Initializable, Context, IERC20, OwnableUpgradeable {
+contract LiquidityGeneratorToken is
+    Initializable,
+    IERC20,
+    OwnableUpgradeable
+{
     using SafeMath for uint256;
     using Address for address;
 
@@ -33,8 +41,8 @@ contract LiquidityGeneratorToken is   Initializable, Context, IERC20, OwnableUpg
     uint256 public _liquidityFee;
     uint256 private _previousLiquidityFee;
 
-    ISwapRouter public  uniswapRouter;
-    address public  uniswapPair;
+    ISwapRouter public uniswapRouter;
+    address public uniswapPair;
 
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
@@ -64,9 +72,9 @@ contract LiquidityGeneratorToken is   Initializable, Context, IERC20, OwnableUpg
         string memory symbol_,
         uint256 supply_,
         uint256 taxFee_,
-        uint256 liquidityFee_,
+        uint256 liquidityFee_
     ) external initializer {
-            __Ownable_init();
+        __Ownable_init();
 
         _name = name_;
         _symbol = symbol_;
