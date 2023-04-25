@@ -9,11 +9,7 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract LiquidityGeneratorToken is
-    Initializable,
-    IERC20,
-    OwnableUpgradeable
-{
+contract LiquidityGeneratorToken is Initializable, IERC20, OwnableUpgradeable {
     using SafeMath for uint256;
     using Address for address;
 
@@ -43,11 +39,13 @@ contract LiquidityGeneratorToken is
 
     ISwapRouter public uniswapRouter;
     address public uniswapPair;
+    address public immutable WETH;
+    IUniswapV3Factory public immutable factory;
 
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
 
-    uint256 public constant _maxTxAmount = 5000000 * 10 ** 6 * 10 ** 9;
+    uint256 public _maxTxAmount = 5000000 * 10 ** 6 * 10 ** 9;
     uint256 private constant numTokensSellToAddToLiquidity =
         500000 * 10 ** 6 * 10 ** 9;
 
@@ -63,6 +61,11 @@ contract LiquidityGeneratorToken is
         inSwapAndLiquify = true;
         _;
         inSwapAndLiquify = false;
+    }
+
+    constructor(address WETH_, address factory_) {
+        WETH = WETH_;
+        factory = IUniswapV3Factory(factory_);
     }
 
     function initialize(
@@ -89,10 +92,7 @@ contract LiquidityGeneratorToken is
 
         uniswapRouter = ISwapRouter(uniswapRouter_);
         // Create a uniswap pair for this new token
-        uniswapPair = IUniswapV3Factory(uniswapRouter.factory()).createPool(
-            address(this),
-            uniswapRouter.WETH()
-        );
+        uniswapPair = factory.createPool(address(this), WETH, 0);
 
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
@@ -499,18 +499,23 @@ contract LiquidityGeneratorToken is
         // generate the uniswap pair path of token -> weth
         address[] memory path = new address[](2);
         path[0] = address(this);
-        path[1] = uniswapRouter.WETH();
+        path[1] = WETH;
 
         _approve(address(this), address(uniswapRouter), tokenAmount);
 
-        // make the swap
-        uniswapRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
-            path,
-            address(this),
-            block.timestamp
-        );
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+            .ExactInputSingleParams(
+                address(this),
+                WETH,
+                0,
+                address(this),
+                block.timestamp,
+                tokenAmount,
+                0,
+                0
+            );
+
+        uniswapRouter.exactInputSingle{value: msg.value}(params);
     }
 
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
