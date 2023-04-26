@@ -34,7 +34,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract SimpleERC20 is Initializable, Context, IERC20, IERC20Metadata {
+contract StandardERC20 is Initializable, Context, IERC20, IERC20Metadata {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -43,15 +43,18 @@ contract SimpleERC20 is Initializable, Context, IERC20, IERC20Metadata {
 
     string private _name;
     string private _symbol;
+    uint8 private _decimals;
 
     function initialize(
         address owner_,
         string memory name_,
         string memory symbol_,
-        uint256 supply_
+        uint256 supply_,
+        uint8 decimals_
     ) external initializer {
         _name = name_;
         _symbol = symbol_;
+        _decimals = decimals_;
         _mint(owner_, supply_);
     }
 
@@ -84,7 +87,7 @@ contract SimpleERC20 is Initializable, Context, IERC20, IERC20Metadata {
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
     function decimals() public view virtual override returns (uint8) {
-        return 18;
+        return _decimals;
     }
 
     /**
