@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./StandardERC20.sol";
 
-contract TokenFactory is AccessControl {
+contract TokenMaker is AccessControl {
     address immutable standardERC20;
     uint256 mintFee;
 
