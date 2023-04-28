@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./StandardERC20.sol";
 
 contract TokenMaker is AccessControl {
-    address immutable standardERC20;
-    uint256 mintFee;
+    address public immutable standardERC20;
+    uint256 public mintFee;
 
     event BasicTokenCreated(address indexed token, string name);
     event TokenFlushed(
@@ -27,8 +27,8 @@ contract TokenMaker is AccessControl {
 
     function flushETH() external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(address(this).balance > 0, "TokenFactory: zero ether balance");
-        Address.sendValue(payable(_msgSender()), address(this).balance);
         emit EtherFlushed(_msgSender(), address(this).balance);
+        Address.sendValue(payable(_msgSender()), address(this).balance);
     }
 
     function flushERC20(

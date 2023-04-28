@@ -1,12 +1,9 @@
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Contract } from "ethers";
 import {
   BasicTokenCreatedEvent,
   TokenMaker,
-  TokenMakerInterface,
 } from "../typechain-types/contracts/TokenMaker";
 
 const name = "Test Token",
@@ -33,7 +30,11 @@ describe("TokenMaker", function () {
 
     const trans = await tx.wait();
 
-    const address = (trans.events?.find(v => v.event == "BasicTokenCreated") as BasicTokenCreatedEvent).args[0];
+    const address = (
+      trans.events?.find(
+        (v) => v.event == "BasicTokenCreated"
+      ) as BasicTokenCreatedEvent
+    ).args[0];
 
     return StandardERC20Factory.attach(address);
   };
@@ -53,10 +54,19 @@ describe("TokenMaker", function () {
       mintFee
     );
 
-    return { TokenMaker, owner, otherAccount };
+    return { TokenMaker, StandardERC20, owner, otherAccount };
   }
 
   describe("TokenFactory", function () {
+    it("Should has correct initial values", async function () {
+      const { TokenMaker, StandardERC20 } = await loadFixture(
+        deployContractsFixture
+      );
+
+      expect(await TokenMaker.mintFee()).to.equal(mintFee);
+      expect(await TokenMaker.standardERC20()).to.equal(StandardERC20.address);
+    });
+
     it("Should create token", async function () {
       const { TokenMaker } = await loadFixture(deployContractsFixture);
       const tokenCreated = await createToken(TokenMaker);
@@ -65,9 +75,11 @@ describe("TokenMaker", function () {
     });
 
     it("Should flush ETH balance", async function () {
-      const { TokenMaker } = await loadFixture(deployContractsFixture);
+      const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
 
-      const balanceBefore = await ethers.provider.getBalance(TokenMaker.address);
+      const balanceBefore = await ethers.provider.getBalance(
+        TokenMaker.address
+      );
 
       await createToken(TokenMaker);
 
@@ -76,19 +88,23 @@ describe("TokenMaker", function () {
       expect(balanceAfter).to.equal(mintFee);
       expect(balanceAfter).to.greaterThan(balanceBefore);
 
-      await TokenMaker.flushETH();
+      await expect(TokenMaker.flushETH())
+        .to.emit(TokenMaker, "EtherFlushed")
+        .withArgs(owner.address, balanceAfter);
 
-      const balanceAfter2 = await ethers.provider.getBalance(TokenMaker.address);
+      const balanceAfter2 = await ethers.provider.getBalance(
+        TokenMaker.address
+      );
 
       expect(balanceAfter2).to.equal(ethers.constants.Zero);
     });
 
-    // it("Should not flush ETH balance", async function () {
-    //   const { lock, lockedAmount } = await loadFixture(deployContractsFixture);
+    it("Should not flush ETH balance", async function () {
+      const { TokenMaker } = await loadFixture(deployContractsFixture);
 
-    //   expect(await ethers.provider.getBalance(lock.address)).to.equal(
-    //     lockedAmount
-    //   );
-    // });
+      await expect(TokenMaker.flushETH()).to.revertedWith(
+        "TokenFactory: zero ether balance"
+      );
+    });
   });
 });

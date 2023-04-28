@@ -1,19 +1,20 @@
 import { ethers } from "hardhat";
 
+const mintFee = ethers.constants.WeiPerEther.div(100);
+
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const StandardERC20Factory = await ethers.getContractFactory("StandardERC20");
+  const StandardERC20 = await StandardERC20Factory.deploy();
 
-  const lockedAmount = ethers.utils.parseEther("0.001");
-
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
-
-  await lock.deployed();
-
-  console.log(
-    `Lock with ${ethers.utils.formatEther(lockedAmount)}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
+  const TokenMakerFactory = await ethers.getContractFactory("TokenMaker");
+  const TokenMaker = await TokenMakerFactory.deploy(
+    StandardERC20.address,
+    mintFee
   );
+
+  await TokenMaker.deployed();
+
+  console.log(`TokenMaker deployed to address ${TokenMaker.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
