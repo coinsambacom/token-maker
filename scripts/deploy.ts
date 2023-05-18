@@ -6,9 +6,13 @@ async function main() {
   const StandardERC20Factory = await ethers.getContractFactory("StandardERC20");
   const StandardERC20 = await StandardERC20Factory.deploy();
 
+  const MintableERC20Factory = await ethers.getContractFactory("MintableERC20");
+  const MintableERC20 = await MintableERC20Factory.deploy();
+
   const TokenMakerFactory = await ethers.getContractFactory("TokenMaker");
   const TokenMaker = await TokenMakerFactory.deploy(
     StandardERC20.address,
+    MintableERC20.address,
     mintFee
   );
 

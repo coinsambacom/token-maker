@@ -2,13 +2,12 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import {
-  BasicTokenCreatedEvent,
+  TokenCreatedEvent,
   TokenMaker,
 } from "../typechain-types/contracts/TokenMaker";
 
 const name = "Test Token",
   symbol = "TTK",
-  decimals = 18,
   initialSupply = 21000000,
   mintFee = ethers.constants.WeiPerEther.div(10);
 
@@ -18,22 +17,16 @@ describe("TokenMaker", function () {
       "StandardERC20"
     );
 
-    const tx = await factory.newStandardToken(
-      name,
-      symbol,
-      decimals,
-      initialSupply,
-      {
-        value: mintFee,
-      }
-    );
+    const tx = await factory.newStandardERC20(name, symbol, initialSupply, {
+      value: mintFee,
+    });
 
     const trans = await tx.wait();
 
     const address = (
       trans.events?.find(
-        (v) => v.event == "BasicTokenCreated"
-      ) as BasicTokenCreatedEvent
+        (v) => v.event == "TokenCreated"
+      ) as TokenCreatedEvent
     ).args[0];
 
     return StandardERC20Factory.attach(address);
@@ -48,13 +41,19 @@ describe("TokenMaker", function () {
     );
     const StandardERC20 = await StandardERC20Factory.deploy();
 
+    const MintableERC20Factory = await ethers.getContractFactory(
+      "MintableERC20"
+    );
+    const MintableERC20 = await MintableERC20Factory.deploy();
+
     const TokenMakerFactory = await ethers.getContractFactory("TokenMaker");
     const TokenMaker = await TokenMakerFactory.deploy(
       StandardERC20.address,
+      MintableERC20.address,
       mintFee
     );
 
-    return { TokenMaker, StandardERC20, owner, otherAccount };
+    return { TokenMaker, StandardERC20, MintableERC20, owner, otherAccount };
   }
 
   describe("TokenFactory", function () {

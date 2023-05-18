@@ -5,12 +5,18 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./StandardERC20.sol";
+import "./MintableERC20.sol";
+
+error IncorrectFee();
 
 contract TokenMaker is AccessControl {
     address public immutable standardERC20;
+    address public immutable mintableERC20;
+
     uint256 public mintFee;
 
-    event BasicTokenCreated(address indexed token, string name);
+    event TokenCreated(address indexed token, string name);
+
     event TokenFlushed(
         address sender,
         address tokenContractAddress,
@@ -19,10 +25,21 @@ contract TokenMaker is AccessControl {
     event EtherFlushed(address sender, uint256 amount);
     event FeeChanged(address sender, uint256 fee);
 
-    constructor(address standardERC20_, uint256 mintFee_) {
+    constructor(
+        address standardERC20_,
+        address mintableERC20_,
+        uint256 mintFee_
+    ) {
         standardERC20 = standardERC20_;
+        mintableERC20 = mintableERC20_;
         mintFee = mintFee_;
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    function validateFee() private {
+        if (msg.value != mintFee) {
+            revert IncorrectFee();
+        }
     }
 
     function flushETH() external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -50,21 +67,32 @@ contract TokenMaker is AccessControl {
         emit FeeChanged(_msgSender(), newFee);
     }
 
-    function newStandardToken(
+    function newStandardERC20(
         string calldata name,
         string calldata symbol,
-        uint8 decimals,
+        uint256 supply
+    ) external payable {
+        validateFee();
+
+        address clone = Clones.clone(standardERC20);
+        StandardERC20(clone).initialize(_msgSender(), name, symbol, supply);
+        emit TokenCreated(clone, name);
+    }
+
+    function newMintableERC20(
+        string calldata name,
+        string calldata symbol,
         uint256 initialSupply
     ) external payable {
-        require(msg.value == mintFee, "wrong fee");
-        address clone = Clones.clone(standardERC20);
-        StandardERC20(clone).initialize(
+        validateFee();
+
+        address clone = Clones.clone(mintableERC20);
+        MintableERC20(clone).initialize(
             _msgSender(),
             name,
             symbol,
-            initialSupply,
-            decimals
+            initialSupply
         );
-        emit BasicTokenCreated(clone, name);
+        emit TokenCreated(clone, name);
     }
 }
