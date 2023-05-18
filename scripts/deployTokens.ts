@@ -1,7 +1,5 @@
 import { ethers } from "hardhat";
 
-const mintFee = ethers.constants.WeiPerEther.div(100);
-
 async function main() {
   const StandardERC20Factory = await ethers.getContractFactory("StandardERC20");
   const StandardERC20 = await StandardERC20Factory.deploy();
@@ -9,16 +7,8 @@ async function main() {
   const MintableERC20Factory = await ethers.getContractFactory("MintableERC20");
   const MintableERC20 = await MintableERC20Factory.deploy();
 
-  const TokenMakerFactory = await ethers.getContractFactory("TokenMaker");
-  const TokenMaker = await TokenMakerFactory.deploy(
-    StandardERC20.address,
-    MintableERC20.address,
-    mintFee
-  );
-
-  await TokenMaker.deployed();
-
-  console.log(`TokenMaker deployed to address ${TokenMaker.address}`);
+  console.log(`StandardERC20 deployed to address ${StandardERC20.address}`);
+  console.log(`MintableERC20 deployed to address ${MintableERC20.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -4,10 +4,13 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./StandardERC20.sol";
 import "./MintableERC20.sol";
 
 error IncorrectFee();
+error NoBalance();
 
 contract TokenMaker is AccessControl {
     address public immutable standardERC20;
@@ -43,7 +46,9 @@ contract TokenMaker is AccessControl {
     }
 
     function flushETH() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(address(this).balance > 0, "TokenFactory: zero ether balance");
+        if (address(this).balance == 0) {
+            revert NoBalance();
+        }
         emit EtherFlushed(_msgSender(), address(this).balance);
         Address.sendValue(payable(_msgSender()), address(this).balance);
     }
@@ -53,7 +58,9 @@ contract TokenMaker is AccessControl {
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         IERC20 tokenContract = IERC20(tokenContractAddress);
         uint256 contractBalance = tokenContract.balanceOf(address(this));
-        require(contractBalance > 0, "TokenFactory: zero token balance");
+        if (contractBalance == 0) {
+            revert NoBalance();
+        }
         if (!tokenContract.transfer(_msgSender(), contractBalance)) {
             revert();
         }
