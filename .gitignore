@@ -114,3 +114,4 @@ typechain-types
 cache
 artifacts
 
+/artifacts-dbg
