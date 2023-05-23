@@ -1,4 +1,5 @@
 import { ethers } from "hardhat";
+import fs from "fs";
 
 async function main() {
   const StandardERC20Factory = await ethers.getContractFactory("StandardERC20");
@@ -9,6 +10,8 @@ async function main() {
 
   console.log(`StandardERC20 deployed to address ${StandardERC20.address}`);
   console.log(`MintableERC20 deployed to address ${MintableERC20.address}`);
+
+  fs.writeFileSync("tmp", `${StandardERC20.address},${MintableERC20.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

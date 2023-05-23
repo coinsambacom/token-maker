@@ -19,10 +19,10 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      ethereum: "NFRA5IUKX9P837S9UUFHBVGIBW8PC3UFFN",
+      mainnet: "NFRA5IUKX9P837S9UUFHBVGIBW8PC3UFFN",
       celo: "3UG79VPKJE9D4XJSFYGTGC8IPR5PU5YFPH",
       alfajores: "3UG79VPKJE9D4XJSFYGTGC8IPR5PU5YFPH",
-      bsctest: "1WB1S78ENEHYH3PKHYWMH4YES9B9113W8H",
+      bscTestnet: "1WB1S78ENEHYH3PKHYWMH4YES9B9113W8H",
       bsc: "1WB1S78ENEHYH3PKHYWMH4YES9B9113W8H"
     },
     customChains: [
@@ -30,7 +30,7 @@ const config: HardhatUserConfig = {
         network: "alfajores",
         chainId: 44787,
         urls: {
-          apiURL: "https://api-alfajores.celoscan.ioc/api",
+          apiURL: "https://api-alfajores.celoscan.io/api",
           browserURL: "https://alfajores.celoscan.io",
         },
       },
@@ -40,14 +40,6 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.celoscan.io/api",
           browserURL: "https://celoscan.io/",
-        },
-      },
-      {
-        network: "bsctest",
-        chainId: 97,
-        urls: {
-          apiURL: "https://api.bscscan.com/api",
-          browserURL: "https://bscscan.com/",
         },
       },
       {

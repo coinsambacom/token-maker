@@ -4,7 +4,9 @@
     "test": "npx hardhat test",
     "dashboard": "npx truffle dashboard",
     "deployTokens": "npx hardhat run ./scripts/deployTokens.ts --network dashboard",
-    "deployTokenMaker": "npx hardhat run ./scripts/deployTokenMaker.ts --network dashboard"
+    "deployTokenMaker": "npx hardhat run ./scripts/deployTokenMaker.ts --network dashboard",
+    "verify": "npx hardhat verify --network dashboard",
+    "verifyTokens": "npx hardhat run ./scripts/verifyTokens.ts --network dashboard"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",

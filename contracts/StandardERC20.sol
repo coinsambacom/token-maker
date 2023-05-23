@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+// Written by Coinsamba.com Team
+
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
