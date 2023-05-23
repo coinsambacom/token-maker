@@ -20,3 +20,10 @@ yarn run verifyTokens
 ```
 
 Done!
+
+
+## To manually verify tokens after deploy
+
+```shell
+yarn run verify address
+```

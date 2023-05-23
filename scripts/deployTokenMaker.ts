@@ -29,7 +29,7 @@ async function main() {
   deployedAddresses[(await TokenMaker.provider.getNetwork()).chainId] =
     TokenMaker.address;
 
-  fs.writeFileSync(jsonName, JSON.stringify(deployedAddresses));
+  fs.writeFileSync(jsonName, JSON.stringify(deployedAddresses, null, 2));
 }
 
 // We recommend this pattern to be able to use async/await everywhere
