@@ -13,7 +13,7 @@ error IncorrectFee();
 
 /// @title TokenMaker
 /// @author Coinsamba Team
-/// @notice Handle token creation inside Coinsamba platform
+/// @notice Handles token creation inside the Coinsamba platform
 contract TokenMaker is AccessControl {
     using SafeMath for uint256;
 
@@ -26,14 +26,15 @@ contract TokenMaker is AccessControl {
     uint256 public mintableFee;
 
     event TokenCreated(address indexed token, string name);
-
+    event FeeChanged(address indexed sender, bool mintable, uint256 fee);
+    
     event TokenFlushed(
-        address sender,
+        address indexed sender,
         address tokenContractAddress,
         uint256 amount
     );
-    event EtherFlushed(address sender, uint256 amount);
-    event FeeChanged(address sender, bool mintable, uint256 fee);
+    event EtherFlushed(address indexed sender, uint256 amount);
+
 
     constructor(
         address standardERC20_,
@@ -46,6 +47,8 @@ contract TokenMaker is AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    /// @dev Validates if the sent fee matches the required fee
+    /// @param mintable Flag indicating whether the token being created is mintable or not
     function validateFee(bool mintable) private {
         uint256 mintFee = mintable ? mintableFee : standardFee;
 
@@ -54,25 +57,29 @@ contract TokenMaker is AccessControl {
         }
     }
 
+    /// @dev Flushes the contract's ETH balance to the sender
     function flushETH() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 contractBalance = address(this).balance;
+        uint256 balance = address(this).balance;
 
-        Address.sendValue(payable(_msgSender()), contractBalance);
-        emit EtherFlushed(_msgSender(), contractBalance);
+        Address.sendValue(payable(_msgSender()), balance);
+        emit EtherFlushed(_msgSender(), balance);
     }
 
+    /// @dev Flushes the specified ERC20 token balance to the sender
+    /// @param tokenContractAddress The address of the ERC20 token contract
     function flushERC20(
         address tokenContractAddress
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         IERC20 tokenContract = IERC20(tokenContractAddress);
-        uint256 contractBalance = tokenContract.balanceOf(address(this));
+        uint256 balance = tokenContract.balanceOf(address(this));
 
-        if (!tokenContract.transfer(_msgSender(), contractBalance)) {
-            revert();
-        }
-        emit TokenFlushed(_msgSender(), tokenContractAddress, contractBalance);
+        tokenContract.transfer(_msgSender(), balance);
+        emit TokenFlushed(_msgSender(), tokenContractAddress, balance);
     }
 
+    /// @dev Changes the creation fee for either standard or mintable tokens
+    /// @param newFee The new fee value
+    /// @param mintable Flag indicating whether the fee change is for mintable tokens or not
     function changeCreationFee(
         uint256 newFee,
         bool mintable
@@ -85,6 +92,12 @@ contract TokenMaker is AccessControl {
         emit FeeChanged(_msgSender(), mintable, newFee);
     }
 
+    /// @dev Creates a new token with the specified parameters
+    /// @param name The name of the token
+    /// @param symbol The symbol of the token
+    /// @param supply The initial supply of the token
+    /// @param mintable Flag indicating whether the token is mintable or not
+    /// @param referrer The address of the referrer who will receive 1% of the fee
     function createToken(
         string calldata name,
         string calldata symbol,
