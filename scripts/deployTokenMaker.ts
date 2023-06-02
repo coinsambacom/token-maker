@@ -3,7 +3,7 @@ import fs from "fs";
 
 const jsonName = "deployedtokenMakers.json";
 
-const mintFee = ethers.constants.WeiPerEther.div(100);
+const mintFee = ethers.utils.parseEther("0.01");
 
 const [standardErc20Address, mintableErc20Address] = fs
   .readFileSync("tmp")
