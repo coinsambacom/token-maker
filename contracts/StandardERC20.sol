@@ -6,6 +6,10 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 contract StandardERC20 is ERC20Upgradeable {
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address owner_,
         string calldata name_,

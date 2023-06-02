@@ -8,6 +8,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 
 contract MintableERC20 is ERC20Upgradeable, OwnableUpgradeable {
+    constructor() {
+        _disableInitializers();
+    }
+    
     function initialize(
         address owner_,
         string calldata name_,

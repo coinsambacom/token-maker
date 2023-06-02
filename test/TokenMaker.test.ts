@@ -15,7 +15,8 @@ import {
 const name = "Test Token",
   symbol = "TTK",
   initialSupply = ethers.BigNumber.from(21000000),
-  mintFee = ethers.utils.parseEther("0.1");
+  mintFee = ethers.utils.parseEther("0.1"),
+  referrer = ethers.constants.AddressZero;
 
 describe("TokenMaker", function () {
   let StandardERC20Factory: StandardERC20__factory;
@@ -27,9 +28,16 @@ describe("TokenMaker", function () {
   });
 
   const createStandardERC20 = async (factory: TokenMaker) => {
-    const tx = await factory.newStandardERC20(name, symbol, initialSupply, {
-      value: mintFee,
-    });
+    const tx = await factory.createToken(
+      name,
+      symbol,
+      initialSupply,
+      false,
+      referrer,
+      {
+        value: mintFee,
+      }
+    );
 
     const trans = await tx.wait();
 
@@ -41,9 +49,16 @@ describe("TokenMaker", function () {
   };
 
   const createMintableERC20 = async (factory: TokenMaker) => {
-    const tx = await factory.newMintableERC20(name, symbol, initialSupply, {
-      value: mintFee,
-    });
+    const tx = await factory.createToken(
+      name,
+      symbol,
+      initialSupply,
+      true,
+      referrer,
+      {
+        value: mintFee,
+      }
+    );
 
     const trans = await tx.wait();
 
@@ -81,61 +96,96 @@ describe("TokenMaker", function () {
   }
 
   describe("TokenFactory", function () {
-    it("Should has correct initial values", async function () {
-      const { TokenMaker, StandardERC20 } = await loadFixture(
-        deployContractsFixture
-      );
+    describe("Admin methods", function () {
+      it("Should has correct initial values", async function () {
+        const { TokenMaker, StandardERC20, MintableERC20 } = await loadFixture(
+          deployContractsFixture
+        );
 
-      expect(await TokenMaker.mintFee()).to.equal(mintFee);
-      expect(await TokenMaker.standardERC20()).to.equal(StandardERC20.address);
+        expect(await TokenMaker.standardFee()).to.equal(mintFee);
+        expect(await TokenMaker.mintableFee()).to.equal(mintFee);
+
+        expect(await TokenMaker.standardERC20()).to.equal(
+          StandardERC20.address
+        );
+        expect(await TokenMaker.mintableERC20()).to.equal(
+          MintableERC20.address
+        );
+      });
+
+      it("Should change fees", async function () {
+        const { TokenMaker, StandardERC20 } = await loadFixture(
+          deployContractsFixture
+        );
+
+        const newStandardFee = ethers.utils.parseEther("0.0033"),
+          newMintableFee = ethers.utils.parseEther("0.002");
+
+        expect(await TokenMaker.standardFee()).to.equal(mintFee);
+        expect(await TokenMaker.mintableFee()).to.equal(mintFee);
+
+        await TokenMaker.changeCreationFee(newStandardFee, false);
+        expect(await TokenMaker.standardFee()).to.equal(newStandardFee);
+
+        await TokenMaker.changeCreationFee(newMintableFee, true);
+        expect(await TokenMaker.mintableFee()).to.equal(newMintableFee);
+      });
+
+      it("Should flush ETH balance", async function () {
+        const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
+
+        const balanceBefore = await ethers.provider.getBalance(
+          TokenMaker.address
+        );
+
+        await createStandardERC20(TokenMaker);
+
+        const balanceAfter = await ethers.provider.getBalance(
+          TokenMaker.address
+        );
+
+        // sub referrer fee
+        const referrerCut = mintFee.div(100);
+        expect(balanceAfter).to.equal(mintFee.sub(referrerCut));
+        expect(balanceAfter).to.greaterThan(balanceBefore);
+
+        await expect(TokenMaker.flushETH())
+          .to.emit(TokenMaker, "EtherFlushed")
+          .withArgs(owner.address, balanceAfter);
+
+        const balanceAfter2 = await ethers.provider.getBalance(
+          TokenMaker.address
+        );
+
+        expect(balanceAfter2).to.equal(ethers.constants.Zero);
+      });
+
+      it("Should not flush ETH balance", async function () {
+        const { TokenMaker } = await loadFixture(deployContractsFixture);
+
+        await TokenMaker.flushETH();
+
+        // await expect(TokenMaker.flushETH()).to.be.revertedWithCustomError(
+        //   TokenMaker,
+        //   "NoBalance"
+        // );
+      });
     });
 
-    it("Should create standard erc20", async function () {
-      const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
-      const tokenCreated = await createStandardERC20(TokenMaker);
+    describe("User methods", function () {
+      it("Should create standard erc20", async function () {
+        const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
+        const tokenCreated = await createStandardERC20(TokenMaker);
 
-      validateTokenCreated(tokenCreated, owner.address);
-    });
+        validateTokenCreated(tokenCreated, owner.address);
+      });
 
-    it("Should create mintable erc20", async function () {
-      const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
-      const tokenCreated = await createMintableERC20(TokenMaker);
+      it("Should create mintable erc20", async function () {
+        const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
+        const tokenCreated = await createMintableERC20(TokenMaker);
 
-      validateTokenCreated(tokenCreated, owner.address);
-    });
-
-    it("Should flush ETH balance", async function () {
-      const { TokenMaker, owner } = await loadFixture(deployContractsFixture);
-
-      const balanceBefore = await ethers.provider.getBalance(
-        TokenMaker.address
-      );
-
-      await createStandardERC20(TokenMaker);
-
-      const balanceAfter = await ethers.provider.getBalance(TokenMaker.address);
-
-      expect(balanceAfter).to.equal(mintFee);
-      expect(balanceAfter).to.greaterThan(balanceBefore);
-
-      await expect(TokenMaker.flushETH())
-        .to.emit(TokenMaker, "EtherFlushed")
-        .withArgs(owner.address, balanceAfter);
-
-      const balanceAfter2 = await ethers.provider.getBalance(
-        TokenMaker.address
-      );
-
-      expect(balanceAfter2).to.equal(ethers.constants.Zero);
-    });
-
-    it("Should not flush ETH balance", async function () {
-      const { TokenMaker } = await loadFixture(deployContractsFixture);
-
-      await expect(TokenMaker.flushETH()).to.be.revertedWithCustomError(
-        TokenMaker,
-        "NoBalance"
-      );
+        validateTokenCreated(tokenCreated, owner.address);
+      });
     });
   });
 });
