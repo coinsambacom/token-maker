@@ -25,5 +25,5 @@ Done!
 ## To manually verify tokens after deploy
 
 ```shell
-yarn run verify address
+yarn run verify 0xaddress
 ```

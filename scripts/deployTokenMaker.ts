@@ -1,7 +1,6 @@
 import { ethers } from "hardhat";
 import fs from "fs";
-
-const jsonName = "deployedtokenMakers.json";
+import { jsonName, deployedAddresses } from "./utils";
 
 const mintFee = ethers.utils.parseEther("0.01");
 
@@ -11,10 +10,6 @@ const [standardErc20Address, mintableErc20Address] = fs
   .split(",");
 
 async function main() {
-  const deployedAddresses: { [id: number]: string } = JSON.parse(
-    fs.readFileSync(jsonName).toString()
-  );
-
   const TokenMakerFactory = await ethers.getContractFactory("TokenMaker");
   const TokenMaker = await TokenMakerFactory.deploy(
     standardErc20Address,
@@ -26,7 +21,9 @@ async function main() {
 
   console.log(`TokenMaker deployed to address ${TokenMaker.address}`);
 
-  deployedAddresses[(await TokenMaker.provider.getNetwork()).chainId] =
+  const network = await TokenMaker.provider.getNetwork();
+
+  deployedAddresses[network.chainId] =
     TokenMaker.address;
 
   fs.writeFileSync(jsonName, JSON.stringify(deployedAddresses, null, 2));

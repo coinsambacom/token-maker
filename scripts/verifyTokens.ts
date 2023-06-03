@@ -1,12 +1,18 @@
-import fs from "fs";
-import { run } from "hardhat";
-
-const [standardErc20Address, mintableErc20Address] = fs
-  .readFileSync("tmp")
-  .toString()
-  .split(",");
+import { ethers, run } from "hardhat";
+import { deployedAddresses } from "./utils";
 
 async function main() {
+  const network = await ethers.provider.getNetwork();
+  const chainId = network.chainId;
+
+  const TokenMaker = await ethers.getContractAt(
+    "TokenMaker",
+    deployedAddresses[chainId]
+  );
+
+  const standardErc20Address = await TokenMaker.callStatic.standardERC20();
+  const mintableErc20Address = await TokenMaker.callStatic.mintableERC20();
+
   await run("verify:verify", {
     address: standardErc20Address,
   });

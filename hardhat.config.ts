@@ -28,30 +28,31 @@ const config: HardhatUserConfig = {
       polygonMumbai: "Q2P14V5WH7B38NZXANA8D3PHFYV3XK1NNA"
     },
     customChains: [
-      {
-        network: "alfajores",
-        chainId: 44787,
-        urls: {
-          apiURL: "https://api-alfajores.celoscan.io/api",
-          browserURL: "https://alfajores.celoscan.io",
-        },
-      },
-      {
-        network: "celo",
-        chainId: 42220,
-        urls: {
-          apiURL: "https://api.celoscan.io/api",
-          browserURL: "https://celoscan.io/",
-        },
-      },
-      {
-        network: "bsc",
-        chainId: 56,
-        urls: {
-          apiURL: "https://api-testnet.bscscan.com/api",
-          browserURL: "https://testnet.bscscan.com/",
-        },
-      },
+      // the following code is useless
+      // {
+      //   network: "alfajores",
+      //   chainId: 44787,
+      //   urls: {
+      //     apiURL: "https://api-alfajores.celoscan.io/api",
+      //     browserURL: "https://alfajores.celoscan.io",
+      //   },
+      // },
+      // {
+      //   network: "celo",
+      //   chainId: 42220,
+      //   urls: {
+      //     apiURL: "https://api.celoscan.io/api",
+      //     browserURL: "https://celoscan.io/",
+      //   },
+      // },
+      // {
+      //   network: "bsc",
+      //   chainId: 56,
+      //   urls: {
+      //     apiURL: "https://api.bscscan.com/api",
+      //     browserURL: "https://bscscan.com/",
+      //   },
+      // },
       {
         network: "lineatest",
         chainId: 59140,
